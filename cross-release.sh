@@ -13,6 +13,7 @@ do
   $CROSSBIN $CROSSARGS --target "$t"
 done
 
+# copy common files
 for t in $ARCHS
 do
   cp LICENSE "target/$t/release"
