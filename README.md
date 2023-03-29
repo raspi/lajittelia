@@ -18,3 +18,25 @@ To be sorted directory (files and directories):
   * Will not be sorted because "Fooz" is not "Foo" (word boundary)
 * Foo bar.ini
   * Will not be sorted since it matches two directories "Foo" and "Bar"  
+
+## Usage
+
+```
+Usage: lajittelia [OPTIONS] --target <TARGET> <PATHS>...
+
+Arguments:
+  <PATHS>...  Path(s) to scan for files to be sorted
+
+Options:
+  -t, --target <TARGET>  Target directory for sorted files
+  -Y, --move-files       Move files? If enabled, files are actually moved
+  -h, --help             Print help
+  -V, --version          Print version
+```
+
+## Example
+
+Sort files in `/mnt/nas/not-sorted` and `/mnt/nas/temp` to `/mnt/nas/sorted`: 
+
+    lajittelia --move-files --target /mnt/nas/sorted /mnt/nas/not-sorted /mnt/nas/temp
+
