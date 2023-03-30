@@ -1,5 +1,10 @@
 # lajittelia
 
+![GitHub All Releases](https://img.shields.io/github/downloads/raspi/lajittelia/total?style=for-the-badge)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/raspi/lajittelia?style=for-the-badge)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/raspi/lajittelia?style=for-the-badge)
+
+
 Sort files into target directory matching target directory name(s).
 
 Target directory structure example (only directories):
