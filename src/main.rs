@@ -264,7 +264,7 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    println!("Using {} as sorted target", args.target.display());
+    println!("Using {} as sorting target directory", args.target.display());
 
     let aliases = generate_aliases(&args.target).expect("");
 
