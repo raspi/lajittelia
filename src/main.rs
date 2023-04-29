@@ -37,7 +37,7 @@ fn generate_aliases(
                 let s = n.trim().to_string();
 
                 if entries.contains_key(&*s) {
-                    Error::new(ErrorKind::AlreadyExists, "nopers");
+                    Error::new(ErrorKind::AlreadyExists, "exists");
                 }
 
                 entries.insert(s, entry.path());
@@ -45,7 +45,7 @@ fn generate_aliases(
         } else {
             // Use whole directory name
             if entries.contains_key(&*name) {
-                Error::new(ErrorKind::AlreadyExists, "nopers");
+                Error::new(ErrorKind::AlreadyExists, "exists");
             }
 
             entries.insert(name, entry.path());
@@ -81,11 +81,18 @@ fn trim_str(mut s: String) -> String {
 fn search_candidates(
     entries: HashMap<String, PathBuf>,
     sources: Vec<PathBuf>,
-) -> Result<HashMap<PathBuf, String>, Error> {
+) -> Result<
+    (
+        // Found
+        HashMap<PathBuf, String>,
+        // Multiple matches
+        Vec<PathBuf>
+    ), Error> {
     if sources.is_empty() {
         Error::new(ErrorKind::NotFound, "no sources");
     }
 
+    let mut multiple_matches: Vec<PathBuf> = Vec::new();
     let mut candidates: HashMap<PathBuf, String> = HashMap::new();
 
     let aliases = sort_keys(entries).expect("");
@@ -140,8 +147,8 @@ fn search_candidates(
                 // No matches
                 continue;
             } else if alias_matches.len() > 1 {
-                // Multiple matches
-                // TODO: report multi matches?
+                // Multiple matches, add to a list
+                multiple_matches.push(entry.path());
                 continue;
             }
 
@@ -149,7 +156,7 @@ fn search_candidates(
         }
     }
 
-    Ok(candidates)
+    Ok((candidates, multiple_matches))
 }
 
 // Add (N) suffix to path if we have existing dir/file
@@ -266,31 +273,43 @@ fn main() -> Result<(), Error> {
 
     println!("Using {} as sorting target directory", args.target.display());
 
-    let aliases = generate_aliases(&args.target).expect("");
+    let aliases = generate_aliases(&args.target)?;
+
+    if aliases.is_empty() {
+        eprintln!("target directory {} is empty?", args.target.display());
+        exit(1);
+    }
 
     println!("Finding matches...");
 
-    let candidates = search_candidates(aliases.clone(), args.paths).expect("");
+    let (candidates, multiple_matches) = search_candidates(aliases.clone(), args.paths)?;
 
-    if candidates.is_empty() {
-        println!("No matches found.");
-        exit(0)
+    if !candidates.is_empty() {
+        println!("Matches:");
+
+        for (candidate, alias) in candidates.clone() {
+            let target_dir = aliases[&alias.clone()].to_owned();
+            let new_path = rename_destination(candidate.clone(), target_dir)?;
+
+            if args.move_files {
+                // Actually move
+                match fs::rename(candidate.clone(), new_path.clone()) {
+                    Ok(()) => {
+                        println!("Moved {} to {}", candidate.display(), new_path.display());
+                    }
+                    Err(e) => eprintln!("error: {:?}", e),
+                }
+            } else {
+                println!("Not moving {} to {}", candidate.display(), new_path.display());
+            }
+        }
     }
 
-    println!("Matches:");
+    if !multiple_matches.is_empty() {
+        println!("Multiple matches (not moved):");
 
-    for (candidate, alias) in candidates.clone() {
-        let target_dir = aliases[&alias.clone()].to_owned();
-        let new_path = rename_destination(candidate.clone(), target_dir).expect("???");
-        println!("Moving {:?} to {:?}", candidate, new_path);
-
-        if args.move_files {
-            // Actually move
-
-            match fs::rename(candidate, new_path) {
-                Ok(()) => println!("Moved."),
-                Err(e) => eprintln!("error: {:?}", e),
-            }
+        for p in multiple_matches {
+            println!("{}", p.display())
         }
     }
 
