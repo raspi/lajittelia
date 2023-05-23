@@ -303,6 +303,8 @@ fn main() -> Result<(), Error> {
                 println!("Not moving {} to {}", candidate.display(), new_path.display());
             }
         }
+
+        println!();
     }
 
     if !multiple_matches.is_empty() {
@@ -311,6 +313,8 @@ fn main() -> Result<(), Error> {
         for p in multiple_matches {
             println!("{}", p.display())
         }
+
+        println!();
     }
 
     Ok(())
